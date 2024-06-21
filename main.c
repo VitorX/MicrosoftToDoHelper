@@ -1,69 +1,115 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <curl/curl.h>
+#include <unistd.h>
+#include <string.h>
+#include "todo.h"
+
 
 #define LASTPAGE 1600
-#define TOKEN "eyJ0eXAiOiJKV1QiLCJub25jZSI6InNRMnVvUV9TYlJ1Zm9CamRGbjFqOE5zbE9qR0JjcjY1WUtmWVBLWUZJaUEiLCJhbGciOiJSUzI1NiIsIng1dCI6InE3UDFOdnh1R1F3RE4yVGFpTW92alo4YVp3cyIsImtpZCI6InE3UDFOdnh1R1F3RE4yVGFpTW92alo4YVp3cyJ9.eyJhdWQiOiIwMDAwMDAwMy0wMDAwLTAwMDAtYzAwMC0wMDAwMDAwMDAwMDAiLCJpc3MiOiJodHRwczovL3N0cy53aW5kb3dzLm5ldC83MmY5ODhiZi04NmYxLTQxYWYtOTFhYi0yZDdjZDAxMWRiNDcvIiwiaWF0IjoxNzE4NjA3MjE2LCJuYmYiOjE3MTg2MDcyMTYsImV4cCI6MTcxODYxMjU4NiwiYWNjdCI6MCwiYWNyIjoiMSIsImFjcnMiOlsidXJuOnVzZXI6cmVnaXN0ZXJzZWN1cml0eWluZm8iXSwiYWlvIjoiQWJRQVMvOFhBQUFBTDN6cG5xRFBZNE82VTZSbUZjRkFqWnhUOStpOGE5R2o4c2xnNG4rRFh2bVBLUGszRHNpeXprM0xzd3VNMlhuRHMrNy9RWEQzVUx0RnFhcWQ5d0k0aGloUmVDL3psakxKaTFyRUJiL3RuUnNnMXJaaHNicUtqeGhNVGNWbktSdjd0clFoOWlDM1NCaFBqS2I0NFE1Y2FjQUs0d0hNR0F6RUVvSUt1RXpVb2tHcnphcGoxc2xnbEtwZjM3ZkFjWlNZVXRDMjIrR3RvdHdKN3J0L3VHbjNjRG9ZRFRpcmlqWmt1bU90V1h2ZDVrYz0iLCJhbXIiOlsicnNhIiwid2lhIiwibWZhIl0sImFwcF9kaXNwbGF5bmFtZSI6IkdyYXBoIEV4cGxvcmVyIiwiYXBwaWQiOiJkZThiYzhiNS1kOWY5LTQ4YjEtYThhZC1iNzQ4ZGE3MjUwNjQiLCJhcHBpZGFjciI6IjAiLCJjYXBvbGlkc19sYXRlYmluZCI6WyI1OTU2ZmY1YS02ZmRiLTQ3N2UtOWQ0ZC05ZjdkMjYyZTY5NGEiXSwiY29udHJvbHMiOlsiYXBwX3JlcyJdLCJjb250cm9sc19hdWRzIjpbImRlOGJjOGI1LWQ5ZjktNDhiMS1hOGFkLWI3NDhkYTcyNTA2NCIsIjAwMDAwMDAzLTAwMDAtMDAwMC1jMDAwLTAwMDAwMDAwMDAwMCIsIjAwMDAwMDAzLTAwMDAtMGZmMS1jZTAwLTAwMDAwMDAwMDAwMCJdLCJkZXZpY2VpZCI6ImU5N2RiOGE0LWFmN2UtNGFkYi05Y2M1LTg3YmY4NTIyZDA3OSIsImZhbWlseV9uYW1lIjoiWHVlIiwiZ2l2ZW5fbmFtZSI6IkZlaSIsImlkdHlwIjoidXNlciIsImlwYWRkciI6IjI0MDQ6ZjgwMTo5MDAwOjE4OjE1ZTE6ODgyYTo2ZmM2OjIxNWMiLCJuYW1lIjoiRmVpIFh1ZSAoU2hhbmdoYWkgV2ljcmVzb2Z0IENvIEx0ZCkiLCJvaWQiOiJkNzAxNGYyNi1hNzdiLTRjNmMtYTFiMS1hZTJlYjg2YjUzMmYiLCJvbnByZW1fc2lkIjoiUy0xLTUtMjEtMjEyNzUyMTE4NC0xNjA0MDEyOTIwLTE4ODc5Mjc1MjctNzU2OTk4MDQiLCJwbGF0ZiI6IjMiLCJwdWlkIjoiMTAwMzIwMDM2MzBFRDdBRCIsInJoIjoiMC5BUm9BdjRqNWN2R0dyMEdScXkxODBCSGJSd01BQUFBQUFBQUF3QUFBQUFBQUFBQWFBR3cuIiwic2NwIjoiQ2FsZW5kYXJzLlJlYWRXcml0ZSBDb250YWN0cy5SZWFkV3JpdGUgRGV2aWNlTWFuYWdlbWVudEFwcHMuUmVhZFdyaXRlLkFsbCBEZXZpY2VNYW5hZ2VtZW50Q29uZmlndXJhdGlvbi5SZWFkLkFsbCBEZXZpY2VNYW5hZ2VtZW50Q29uZmlndXJhdGlvbi5SZWFkV3JpdGUuQWxsIERldmljZU1hbmFnZW1lbnRNYW5hZ2VkRGV2aWNlcy5Qcml2aWxlZ2VkT3BlcmF0aW9ucy5BbGwgRGV2aWNlTWFuYWdlbWVudE1hbmFnZWREZXZpY2VzLlJlYWQuQWxsIERldmljZU1hbmFnZW1lbnRNYW5hZ2VkRGV2aWNlcy5SZWFkV3JpdGUuQWxsIERldmljZU1hbmFnZW1lbnRSQkFDLlJlYWQuQWxsIERldmljZU1hbmFnZW1lbnRSQkFDLlJlYWRXcml0ZS5BbGwgRGV2aWNlTWFuYWdlbWVudFNlcnZpY2VDb25maWcuUmVhZC5BbGwgRGV2aWNlTWFuYWdlbWVudFNlcnZpY2VDb25maWcuUmVhZFdyaXRlLkFsbCBEaXJlY3RvcnkuQWNjZXNzQXNVc2VyLkFsbCBEaXJlY3RvcnkuUmVhZFdyaXRlLkFsbCBGaWxlcy5SZWFkV3JpdGUuQWxsIEdyb3VwLlJlYWRXcml0ZS5BbGwgSWRlbnRpdHlSaXNrRXZlbnQuUmVhZC5BbGwgTWFpbC5SZWFkV3JpdGUgTWFpbGJveFNldHRpbmdzLlJlYWRXcml0ZSBOb3Rlcy5SZWFkV3JpdGUuQWxsIG9wZW5pZCBQZW9wbGUuUmVhZCBQb2xpY3kuUmVhZC5BbGwgUHJlc2VuY2UuUmVhZCBQcmVzZW5jZS5SZWFkLkFsbCBwcm9maWxlIFJlcG9ydHMuUmVhZC5BbGwgU2l0ZXMuUmVhZFdyaXRlLkFsbCBUYXNrcy5SZWFkV3JpdGUgVXNlci5SZWFkIFVzZXIuUmVhZEJhc2ljLkFsbCBVc2VyLlJlYWRXcml0ZSBVc2VyLlJlYWRXcml0ZS5BbGwgZW1haWwiLCJzaWduaW5fc3RhdGUiOlsiZHZjX21uZ2QiLCJkdmNfY21wIiwiaW5rbm93bm50d2siLCJrbXNpIl0sInN1YiI6Im1kOE1jV21lZm1wbDhBd2E5dmZocHJZVjhSNGloc3JHOThpMjdRRlVrY28iLCJ0ZW5hbnRfcmVnaW9uX3Njb3BlIjoiV1ciLCJ0aWQiOiI3MmY5ODhiZi04NmYxLTQxYWYtOTFhYi0yZDdjZDAxMWRiNDciLCJ1bmlxdWVfbmFtZSI6InYtZmVpeHVlMUBtaWNyb3NvZnQuY29tIiwidXBuIjoidi1mZWl4dWUxQG1pY3Jvc29mdC5jb20iLCJ1dGkiOiJobS1zRS1vTXVrR3ZqY1lqcS14QUFBIiwidmVyIjoiMS4wIiwid2lkcyI6WyJiNzlmYmY0ZC0zZWY5LTQ2ODktODE0My03NmIxOTRlODU1MDkiXSwieG1zX2NjIjpbIkNQMSJdLCJ4bXNfaWRyZWwiOiIxOCAxIiwieG1zX3NzbSI6IjEiLCJ4bXNfc3QiOnsic3ViIjoiYlp1Q1VESDAzMDJvdzlyN1NOdEVRcVZ4SUtoaVZWTDdwSGtqN1dlU256TSJ9LCJ4bXNfdGNkdCI6MTI4OTI0MTU0N30.aXGV_L--YOZ3IVzhLnykXLCw2Le35mX1noQtvdQfd5h_p1LBVysJa8QK7Rtdv7Wen-q9VihfiYw6zHxaPKJiV5DI1qQXcuJFCm9XX8kPWso0n5zbTdEIK1D3ub1yI7Se6oP964b3wTuoM-G1mUn7dZlmhy3dTvuLjJpd_pTmRGqy7eh8Qfh3JdS4fJkj-YSoy1QF5ppi3UiTk8wSXTrhOtIgI4_5lSeLLXrZnCFYI5sJnN2649Ih2sQgfPI-zAyuL5UGAETU82_l1OrRzqqB6Upe2fGHJc0_EQaBsexpjePOQatcL_t38M43h6gy4XMBQE-b-d4Dnqy0RM_9ZWTNig"
-#define APIENDPOINT "https://graph.microsoft.com"
-#define APIVERSION "v1.0"
-#define MAXURLLEN 100
+#define TOKEN ""
 #define TOKENAUTH "Authorization: Bearer %s"
 
 static char *pTokenHeader;
 
-int createTaskList(char *name);
-void initTokenHeader(char *token);
+static void initTokenHeader(char *token);
+static void freeTokenHeader(char *pTokenHeader);
+static void parseArgs(int argc, char **argv);
+static void showCmd();
+static void printHelpMsg();
+struct cmd_s{
+	char *pTaskListName;
+	char *pToken;
+	int nums;
+	char *startDate;
+	char *timeZone;
+	bool isCreate;
+};
 
+static struct cmd_s cmd;
 int main(int argc, char **argv)
+{
+	parseArgs(argc,argv);
+	showCmd();
+	return 0;
+	initTokenHeader(TOKEN);
+	struct todoList_s todolist;
+	//createTaskList("abc",pTokenHeader,&todolist);
+	createTask("AAMkADhiYTQ4ZTkyLTFhYTctNGJmYy1iYjJkLTY5ZmJmZjBiMGVkYQAuAAAAAADd-_KWVsEtR5gXDuPf7t1hAQA8PgoqDG7ARIJwzLLIi0ZeAAA-mY9GAAA=",5,"2024-06-22T00:00:00.0000000");
+	freeTokenHeader(pTokenHeader);
+	return 0;
+}
+
+static void parseArgs(int argc, char **argv)
+{
+	int nrTasks,opt;
+	while ((opt = getopt(argc, argv, "cn:t:r:hs:q")) != -1) {
+		switch (opt) {
+			case 'c':
+				cmd.isCreate=true;
+				break;		
+			case 'n':
+				nrTasks=atoi(optarg);
+				if(nrTasks==0)
+				{
+					printf("Wrong usage,please specify the num of tasks you want to create.\n");
+					exit(-1);
+				}
+				else
+				cmd.nums=nrTasks;
+				break;
+			case 't':
+				cmd.pToken = strdup(optarg);
+				break;
+			case 'h':
+				printHelpMsg();
+				break;
+			case 's':
+				cmd.startDate=strdup(optarg);	
+			default: 
+				printHelpMsg();
+				exit(EXIT_FAILURE);
+		}
+	}
+/*
+	if (optind >= argc) {
+		fprintf(stderr, "Expected argument after options\n");
+		exit(EXIT_FAILURE);
+	}
+*/
+}
+
+static void showCmd()
+{
+	printf("taskName:%s",cmd.pTaskListName);
+	printf("token:%s",cmd.pToken);
+
+}
+
+
+static void freeTokenHeader(char *pTokenHeader)
+{
+	free(pTokenHeader);
+}
+static void initTokenHeader(char *token)
 {
 	pTokenHeader=malloc(1024*7);
 	if(pTokenHeader==NULL)
 	{
 		fprintf(stderr,"malloc failed!");
-		return -1;
+		return ;
 	}
-
-	initTokenHeader(TOKEN);
-	//printf("%s\n",pTokenHeader);
-	createTaskList("abc");
-	return 0;
-}
-
-void initTokenHeader(char *token)
-{
 	int size=sprintf(pTokenHeader,TOKENAUTH,token);
 }
 
-int createTaskList(char *name)
+static void printHelpMsg()
 {
-	char endpoint[MAXURLLEN];
-	sprintf((char *)endpoint,"%s/%s/me/todo/lists",APIENDPOINT,APIVERSION);
-	CURL *curl_tasklist;
-	struct curl_slist* headers = NULL;
-	headers =    curl_slist_append(headers, "Content-Type: application/json");
-	headers =  curl_slist_append(headers, pTokenHeader);
-	CURLcode res;
-	char postTemp[] = "{'displayName':'%s'}";
-	char postData[100] ;
-	sprintf(postData,postTemp,name);
-	curl_tasklist = curl_easy_init();
-
-	if (curl_tasklist) {
-		curl_easy_setopt(curl_tasklist, CURLOPT_URL,endpoint) ;
-		curl_easy_setopt(curl_tasklist, CURLOPT_HTTPHEADER,headers) ;
-		curl_easy_setopt(curl_tasklist, CURLOPT_POSTFIELDS, postData);
-		res = curl_easy_perform(curl_tasklist);
-		curl_easy_cleanup(curl_tasklist);
-	}
+	printf("todolist - This tools is used to create multiple tasks for Microsoft todo App\n");
+	printf("Usage: todolist -c -n 500 -t {token} -r 50 -s 2024-6-21 {todolistName}");
+	printf("	-c, Create todo List");
+	printf("	-n, Num of todo task of todo list");
+	printf("	-t, Token of used for query or create tasks");
+	printf("	-h, Print help message");
+	printf("	-r, Range of tasks, for example if r is 50, then the tasks 1-50,51-100... will be created. 25 is by default.");
+	printf("	-s, Start date of the first task");
+	printf("	-q, List the todo list owned");
 }
-
-int getTaskList(char *id)
-{
-	return 0;
-}
-
-int createTask(char *tasklistid)
-{
-	return 0;
-}
-
