@@ -23,14 +23,13 @@ struct cmd_s{
 	char *startDate;
 	char *timeZone;
 	bool isCreate;
-};
+}cmd;
 
-static struct cmd_s cmd;
 int main(int argc, char **argv)
 {
 	parseArgs(argc,argv);
-	showCmd();
-	return 0;
+	//showCmd();
+	//return 0;
 	initTokenHeader(TOKEN);
 	struct todoList_s todolist;
 	//createTaskList("abc",pTokenHeader,&todolist);
