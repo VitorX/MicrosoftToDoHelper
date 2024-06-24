@@ -11,11 +11,11 @@
 
 
 struct todoList_s{
-char displayName[256];
-char id[128];
+char *displayName;
+char *id;
 bool isShared;
 };
 
 
-int createTask(char *tasklistid,int nrTask,char *beginDate);
+int createTask(char *tasklistid,int nrTask,char *beginDate,char *pTokenHeader);
 int createTaskList(char *pName,char *pTokenHeader,struct todoList_s *pTodoList);
