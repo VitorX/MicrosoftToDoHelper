@@ -1,2 +1,2 @@
 default:
-	gcc  main.c todo.c -lcurl -ljson-c
+	gcc -Wall  main.c todo.c -lcurl -ljson-c

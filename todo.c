@@ -1,38 +1,30 @@
+#define _GNU_SOURCE
 #include "todo.h"
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <json-c/json.h>
 
+
+#define MAXURLLEN 512 
 #define CONTENTTYPE_JSON "Content-Type: application/json"
 //APIENDPOINT/APIVERSION
 #define TASKENDPOINT "%s/%s/me/todo/lists/%s/tasks" 
-#define MAX_PARALLEL 10
+#define MAX_PARALLEL 3
 
+struct cmd_s cmd;
 struct MemoryStruct {
 	char *memory;
 	size_t size;
 };
 
-struct todoTask
-{
-	char title[128];
-	char dueDateTime[128];
-
-};
-
-
-static int parseJSON(char *pChar,struct todoList_s *pTodolist)
+static void parseJSON(char *pChar,struct todoList_s *pTodolist)
 {
 	json_object *root = json_tokener_parse(pChar);
 	json_object *id = json_object_object_get(root, "id");
 	json_object *displayName = json_object_object_get(root, "displayName");
 	pTodolist->id=strdup(json_object_get_string(id));
 	pTodolist->displayName=strdup(json_object_get_string(displayName));
-//	memcpy(pTodolist->id,json_object_get_string(id),sizeof(todolist.id)/sizeof(todolist.id[0])-1);
-//	memcpy(pTodolist->displayName,json_object_get_string(displayName),sizeof(todolist.displayName)/sizeof(todolist.displayName[0])-1);
-	printf("%s\n",__func__);
-	printf("id:%s\n",pTodolist->id);
-	printf("displayName:%s\n",pTodolist->displayName);
 }
 
 static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
@@ -42,7 +34,6 @@ static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, voi
 
 	char *ptr = realloc(mem->memory, mem->size + realsize + 1);
 	if(!ptr) {
-		/* out of memory! */
 		printf("not enough memory (realloc returned NULL)\n");
 		return 0;
 	}
@@ -54,7 +45,7 @@ static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, voi
 
 	return realsize;
 }
-int createTaskList(char *name,char *pTokenHeader,struct todoList_s *pTodolist)
+void createTaskList(char *name,char *pTokenHeader,struct todoList_s *pTodolist)
 {
 	struct MemoryStruct chunk;
 
@@ -83,9 +74,8 @@ int createTaskList(char *name,char *pTokenHeader,struct todoList_s *pTodolist)
 		curl_easy_cleanup(curl_tasklist);
 	}
 
-
 	if(res==CURLE_OK)
-	{		printf("\nsend create task sucessfully!\n");
+	{		printf("\nsend create task request sucessfully!\n");
 
 #ifdef DEBUG
 		printf("%s\n",chunk.memory);
@@ -96,10 +86,7 @@ int createTaskList(char *name,char *pTokenHeader,struct todoList_s *pTodolist)
 		printf("\ncurl_easy_perform is failed with error: %d\n",res);
 
 }
-int getTaskList(char *id)
-{
-	return 0;
-}
+#ifdef a0
 static size_t write_cb(char *data, size_t n, size_t l, void *userp)
 {
 	/* take care of the data here, ignored in this example */
@@ -107,19 +94,32 @@ static size_t write_cb(char *data, size_t n, size_t l, void *userp)
 	(void)userp;
 	return n*l;
 }
+#endif
 
 static void add_transfer(CURLM *cm, unsigned int i, int *left,char *listID,char *pTokenHeader)
 {
 	char endpoint[MAXURLLEN];
+	char *pTaskJSONData=NULL;
+	struct tm temp_tm;
+	char *pTaskDate=malloc(10+17+1);
+	temp_tm.tm_year=cmd.startDate->tm_year;
+	temp_tm.tm_mon=cmd.startDate->tm_mon;
+	temp_tm.tm_mday=cmd.startDate->tm_mday+i;
+	mktime(&temp_tm);
+	strftime(pTaskDate,10+17+1,"%Y-%m-%dT00:00:00.0000000",&temp_tm);
+	asprintf(&pTaskJSONData,"{\"title\" : \"P%d~%d\",\"dueDateTime\":{\"dateTime\":\"%s\",\"timeZone\":\"Asia/Shanghai\"}}",i*cmd.range,i*cmd.range-1,pTaskDate);
 	sprintf((char *)endpoint,TASKENDPOINT ,APIENDPOINT,APIVERSION,listID);
 	static int printmsg=0;
 	if(printmsg==0)
+	{
 		printf("create todo task:\n%s\n",endpoint);
+		printf("\n%s\n",pTaskJSONData);
+	}
 	printmsg++;
-	
+
 	CURL *eh = curl_easy_init();
 	curl_easy_setopt(eh, CURLOPT_URL, endpoint);
-	curl_easy_setopt(eh, CURLOPT_POSTFIELDS, "{\"title\" : \"new task\",\"dueDateTime\":{\"dateTime\":\"2024-06-21T00:00:00.0000000\",\"timeZone\":\"Asia/Shanghai\"}}");;
+	curl_easy_setopt(eh, CURLOPT_POSTFIELDS,pTaskJSONData); 
 	struct curl_slist* headers = NULL;
 	headers =    curl_slist_append(headers,CONTENTTYPE_JSON );
 	headers =  curl_slist_append(headers, pTokenHeader);
@@ -127,7 +127,7 @@ static void add_transfer(CURLM *cm, unsigned int i, int *left,char *listID,char 
 	curl_multi_add_handle(cm, eh);
 	(*left)++;
 }
-int createTask(char *tasklistid,int nrTask,char *beginDate,char *pTokenHeader)
+int createTask(char *tasklistid,struct cmd_s *pCMD,char *pTokenHeader)
 {
 	CURLM *cm;
 	CURLMsg *msg;
@@ -141,7 +141,7 @@ int createTask(char *tasklistid,int nrTask,char *beginDate,char *pTokenHeader)
 	/* Limit the amount of simultaneous connections curl should allow: */
 	curl_multi_setopt(cm, CURLMOPT_MAXCONNECTS, (long)MAX_PARALLEL);
 
-	for(transfers = 0; transfers < MAX_PARALLEL && transfers < nrTask;
+	for(transfers = 0; transfers < MAX_PARALLEL && transfers < pCMD->nums;
 			transfers++)
 		add_transfer(cm, transfers, &left,tasklistid,pTokenHeader);
 
@@ -164,7 +164,7 @@ int createTask(char *tasklistid,int nrTask,char *beginDate,char *pTokenHeader)
 			else {
 				fprintf(stderr, "E: CURLMsg (%d)\n", msg->msg);
 			}
-			if(transfers < nrTask)
+			if(transfers < pCMD->nums)
 				add_transfer(cm, transfers++, &left,tasklistid,pTokenHeader);
 		}
 		if(left)
