@@ -18,6 +18,7 @@ struct cmd_s{
 	struct tm *startDate;
 	char *timeZone;
 	bool isCreate;
+	bool printResponse;
 };
 struct todoList_s{
 char *displayName;

@@ -13,7 +13,6 @@ static char *pTokenHeader;
 static void initTokenHeader(char *token);
 static void freeResouce();
 static void parseArgs(int argc, char **argv);
-//static void showCmd();
 static void printHelpMsg();
 static void initCmdPara();
 
@@ -38,12 +37,13 @@ static void initCmdPara()
 	cmd.startDate=pTM;	
 	cmd.timeZone="Asia/Shanghai";
 	cmd.range=25;
+	cmd.printResponse=false;
 
 }
 static void parseArgs(int argc, char **argv)
 {
 	int nrTasks,opt;
-	while ((opt = getopt(argc, argv, "c:n:t:r:hs:q")) != -1) {
+	while ((opt = getopt(argc, argv, "c:n:t:r:hs:qv")) != -1) {
 		switch (opt) {
 			case 'c':
 				cmd.pTaskListName = strdup(optarg);
@@ -73,6 +73,9 @@ static void parseArgs(int argc, char **argv)
 			case 'r':
 				cmd.range=atoi(optarg);
 				break;
+			case 'v':
+				cmd.printResponse=true;
+				break;
 			default: 
 				printHelpMsg();
 				exit(EXIT_FAILURE);
@@ -88,20 +91,8 @@ static void parseArgs(int argc, char **argv)
 */
 }
 
-/*
-static void showCmd()
-{
-	printf("\ntaskName:%s\n",cmd.pTaskListName);
-	printf("token:%s\n",cmd.pToken);
-	printf("%d-%02d-%02d\n",cmd.startDate->tm_year+1900,cmd.startDate->tm_mon+1,cmd.startDate->tm_mday);
-}
-*/
-
 static void freeResouce()
 {
-	//free(pTokenHeader);
-/*
-*/
 	if(pTokenHeader)
 		free(pTokenHeader);
 	if(cmd.startDate)
@@ -128,5 +119,6 @@ static void printHelpMsg()
 	printf("	-h, Print help message\n");
 	printf("	-r, Range of tasks, for example if r is 50, then the tasks 1-50,51-100... will be created. 25 is by default.\n");
 	printf("	-s, Start date of the first task\n");
-	printf("	-q, List the todo list owned\n");
+	printf("	-v, Print REST request response.\n");
+	printf("	-q, List the todo list owned(not support yet)\n");
 }
