@@ -13,7 +13,7 @@ static char *pTokenHeader;
 static void initTokenHeader(char *token);
 static void freeResouce();
 static void parseArgs(int argc, char **argv);
-static void showCmd();
+//static void showCmd();
 static void printHelpMsg();
 static void initCmdPara();
 
@@ -26,7 +26,7 @@ int main(int argc, char **argv)
 	struct todoList_s todolist={};
 	createTaskList(cmd.pTaskListName,pTokenHeader,&todolist);
 	createTask(todolist.id,&cmd,pTokenHeader);
-	freeResouce(pTokenHeader);
+	freeResouce();
 	return 0;
 }
 
@@ -78,33 +78,34 @@ static void parseArgs(int argc, char **argv)
 				exit(EXIT_FAILURE);
 		}
 	}
-	/*
+	//caculate n again based on the range
+	cmd.nums=cmd.nums/cmd.range+1;
+/*	
 	   if (optind >= argc) {
 	   fprintf(stderr, "Expected argument after options\n");
 	   exit(EXIT_FAILURE);
 	   }
-	 */
+*/
 }
 
+/*
 static void showCmd()
 {
 	printf("\ntaskName:%s\n",cmd.pTaskListName);
 	printf("token:%s\n",cmd.pToken);
 	printf("%d-%02d-%02d\n",cmd.startDate->tm_year+1900,cmd.startDate->tm_mon+1,cmd.startDate->tm_mday);
 }
-
+*/
 
 static void freeResouce()
 {
-	free(pTokenHeader);
-	if(cmd.pTaskListName)
-		free(cmd.pTaskListName);
-	if(cmd.pToken)
-		free(cmd.pToken);
+	//free(pTokenHeader);
+/*
+*/
+	if(pTokenHeader)
+		free(pTokenHeader);
 	if(cmd.startDate)
 		free(cmd.startDate);
-	if(cmd.timeZone)
-		free(cmd.timeZone);
 }
 static void initTokenHeader(char *token)
 {
