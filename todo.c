@@ -100,22 +100,15 @@ static void add_transfer(CURLM *cm, unsigned int i, int *left,char *listID,char 
 {
 	char endpoint[MAXURLLEN];
 	char *pTaskJSONData=NULL;
-	struct tm temp_tm;
+	struct tm temp_tm={0};
 	char *pTaskDate=malloc(10+17+1);
 	temp_tm.tm_year=cmd.startDate->tm_year;
 	temp_tm.tm_mon=cmd.startDate->tm_mon;
 	temp_tm.tm_mday=cmd.startDate->tm_mday+i;
-	mktime(&temp_tm);
 	strftime(pTaskDate,10+17+1,"%Y-%m-%dT00:00:00.0000000",&temp_tm);
-	asprintf(&pTaskJSONData,"{\"title\" : \"P%d~%d\",\"dueDateTime\":{\"dateTime\":\"%s\",\"timeZone\":\"Asia/Shanghai\"}}",i*cmd.range,i*cmd.range-1,pTaskDate);
+	printf("\n...%s...\n",pTaskDate);
+	asprintf(&pTaskJSONData,"{\"title\" : \"P%d~%d\",\"dueDateTime\":{\"dateTime\":\"%s\",\"timeZone\":\"Asia/Shanghai\"}}",i*cmd.range+1,(i+1)*cmd.range-1,pTaskDate);
 	sprintf((char *)endpoint,TASKENDPOINT ,APIENDPOINT,APIVERSION,listID);
-	static int printmsg=0;
-	if(printmsg==0)
-	{
-		printf("create todo task:\n%s\n",endpoint);
-		printf("\n%s\n",pTaskJSONData);
-	}
-	printmsg++;
 
 	CURL *eh = curl_easy_init();
 	curl_easy_setopt(eh, CURLOPT_URL, endpoint);

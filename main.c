@@ -20,9 +20,7 @@ static void initCmdPara();
 extern struct cmd_s cmd;
 int main(int argc, char **argv)
 {
-	
 	initCmdPara();
-	showCmd();return 0;
 	parseArgs(argc,argv);
 	initTokenHeader(cmd.pToken);
 	struct todoList_s todolist={};
@@ -35,8 +33,9 @@ int main(int argc, char **argv)
 static void initCmdPara()
 {
 	time_t t = time(NULL);
-	struct tm tm = *localtime(&t);
-	cmd.startDate=&tm;	
+	struct tm *pTM=malloc(sizeof(struct tm));
+	*pTM = *localtime(&t);
+	cmd.startDate=pTM;	
 	cmd.timeZone="Asia/Shanghai";
 	cmd.range=25;
 
