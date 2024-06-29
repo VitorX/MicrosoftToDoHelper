@@ -111,7 +111,7 @@ static void initTokenHeader(char *token)
 
 static void printHelpMsg()
 {
-	printf("todolist - This tools is used to create multiple tasks for Microsoft todo App\n");
+	printf("todolist - This tools is used to create multiple tasks for Microsoft todo App. Version 0.0.1.\n");
 	printf("Usage: todolist -c {todolistName} -n 500 -t {token} -r 50 -s 2024-6-21 \n");
 	printf("	-c, Create todo List\n");
 	printf("	-n, Num of todo task of todo list\n");
