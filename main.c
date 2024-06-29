@@ -6,7 +6,7 @@
 #include <time.h>
 
 
-#define TOKENAUTH "Authorization: Bearer %s"
+#define TOKENAUTH "Authorization: Bearer "
 
 static char *pTokenHeader;
 
@@ -100,13 +100,14 @@ static void freeResouce()
 }
 static void initTokenHeader(char *token)
 {
-	pTokenHeader=malloc(1024*7);
+	pTokenHeader=calloc(1,strlen(TOKENAUTH)+strlen(token)+1);
 	if(pTokenHeader==NULL)
 	{
 		fprintf(stderr,"malloc failed!");
 		return ;
 	}
-	sprintf(pTokenHeader,TOKENAUTH,token);
+	pTokenHeader=strcat(pTokenHeader,TOKENAUTH);
+	pTokenHeader=strcat(pTokenHeader,token);
 }
 
 static void printHelpMsg()

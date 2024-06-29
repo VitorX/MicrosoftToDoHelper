@@ -8,8 +8,9 @@
 
 #define MAXURLLEN 512 
 #define CONTENTTYPE_JSON "Content-Type: application/json"
-//APIENDPOINT/APIVERSION
-#define TASKENDPOINT "%s/%s/me/todo/lists/%s/tasks" 
+#define TASKLISTENDPOINT "/me/todo/lists"
+//GRAPHAPIENDPOINT/APIVERSION
+#define TASKENDPOINT "%s%s/me/todo/lists/%s/tasks"
 //Microsoft limit the API requst rate, based on the test 3 is ableto submit the request sucessfull 6/28/2024
 #define MAX_PARALLEL 3
 
@@ -54,8 +55,17 @@ void createTaskList(char *name,char *pTokenHeader,struct todoList_s *pTodolist)
 	chunk.memory = malloc(1);  /* grown as needed by the realloc above */
 	chunk.size = 0;    /* no data at this point */
 
-	char endpoint[MAXURLLEN];
-	sprintf((char *)endpoint,"%s/%s/me/todo/lists",APIENDPOINT,APIVERSION);
+	char *endpoint=calloc(1,strlen(GRAPHAPIENDPOINT)+strlen(APIVERSION)+strlen(TASKLISTENDPOINT)+1);
+
+	if(!endpoint)
+		{
+			perror("calloc()");
+			exit(1);
+		}
+
+	endpoint=strcat(endpoint,GRAPHAPIENDPOINT);
+	endpoint=strcat(endpoint,APIVERSION);
+	endpoint=strcat(endpoint,TASKLISTENDPOINT);
 	CURL *curl_tasklist;
 	struct curl_slist* headers = NULL;
 	headers =    curl_slist_append(headers,CONTENTTYPE_JSON );
@@ -107,7 +117,7 @@ static void add_transfer(CURLM *cm, unsigned int i, int *left,char *listID,char 
 	mktime(&temp_tm);
 	strftime(pTaskDate,10+17+1,"%Y-%m-%dT00:00:00.0000000",&temp_tm);
 	asprintf(&pTaskJSONData,"{\"title\" : \"P%d~%d\",\"dueDateTime\":{\"dateTime\":\"%s\",\"timeZone\":\"Asia/Shanghai\"}}",i*cmd.range+1,(i+1)*cmd.range,pTaskDate);
-	sprintf((char *)endpoint,TASKENDPOINT ,APIENDPOINT,APIVERSION,listID);
+	sprintf((char *)endpoint,TASKENDPOINT ,GRAPHAPIENDPOINT,APIVERSION,listID);
 
 	CURL *eh = curl_easy_init();
 	curl_easy_setopt(eh, CURLOPT_URL, endpoint);

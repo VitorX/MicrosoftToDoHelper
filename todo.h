@@ -2,7 +2,7 @@
 #define __todo_h_
 #endif
 
-#define APIENDPOINT "https://graph.microsoft.com"
+#define GRAPHAPIENDPOINT "https://graph.microsoft.com/"
 #define APIVERSION "v1.0"
 #define DEBUG
 #include <stdbool.h>
