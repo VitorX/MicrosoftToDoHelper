@@ -3,6 +3,10 @@ The main purpose of this repo is used to pratice for develop with C.
 
 MicrosoftToDoHelp tool can help creating the Microsoft todo tasks easily, and this program is still developing.
 
+**Currently, this version only support get the token manully. You can use [Microsoft Graph Explorer](https://developer.microsoft.com/en-us/graph/graph-explorer) to acquire the token easily.**
+
+![Screenshot](./Images/Screenshot_Token.png "Get token from Microsoft Graph Explorer")
+
 ## Required Packages
     apt install libcurl4-openssl-dev
     apt install libjson-c-dev
